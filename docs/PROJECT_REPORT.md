@@ -1,8 +1,8 @@
-# EarningsIQ — Phase 1 Project Report
+# EarningsIQ — Phases 1–2 Project Report
 
 ## Executive summary
 
-EarningsIQ will provide traceable financial intelligence from quarterly Indian-company reports. Phase 1 establishes the Infosys ingestion foundation: page extraction, citation-ready metadata, configurable chunking, Nebius embeddings, and a metadata-filterable Pinecone index.
+EarningsIQ will provide traceable financial intelligence from quarterly Indian-company reports. Phase 1 establishes the Infosys ingestion foundation; Phase 2 adds reusable dense retrieval with company, quarter, and document-type filtering.
 
 ## Problem and objective
 
@@ -20,13 +20,17 @@ The 1,200-character default keeps related financial commentary together without 
 
 One serverless index avoids per-company index sprawl. Metadata supports company, quarter, year, and document-type filters. Page boundaries are never crossed during chunking, so each result maps unambiguously to a document, quarter, and human-readable PDF page.
 
+## Dense retrieval validation
+
+The question is embedded using the same Nebius model as ingestion. Pinecone cosine search returns top-k chunks with metadata. The validation command can search across a company or narrow results by quarter and document type, then prints scores, stable IDs, source filenames, quarters, pages, and text for inspection before generation is added.
+
 ## Validation and limitations
 
 Unit tests validate deterministic chunking and provenance. End-to-end indexing requires the user's exact Nebius embedding model, credentials, Pinecone credentials, and PDFs. Image-only scans require OCR, which Phase 1 does not implement.
 
 ## Roadmap
 
-After validating a Pinecone query: dense retrieval, BM25, reciprocal rank fusion, reranking, grounded generation, Streamlit, LangGraph routing, and the Management Promise Tracker. Future GraphRAG could connect Company → Quarter → Guidance → Expected Metric → Future Actual Metric using Neo4j. Automated NSE/BSE ingestion is deferred.
+After live dense retrieval is validated: BM25, reciprocal rank fusion, reranking, grounded generation, Streamlit, LangGraph routing, and the Management Promise Tracker. Future GraphRAG could connect Company → Quarter → Guidance → Expected Metric → Future Actual Metric using Neo4j. Automated NSE/BSE ingestion is deferred.
 
 ## Conclusion
 
