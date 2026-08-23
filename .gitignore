@@ -6,6 +6,10 @@ __pycache__/
 data/infosys/*.pdf
 !data/infosys/.gitkeep
 data/chunks.jsonl
+data/tcs/*.pdf
+!data/tcs/.gitkeep
+data/hdfcbank/*.pdf
+!data/hdfcbank/.gitkeep
 data/chunks.jsonl.tmp
 logs/*.log
 logs/*.log.*
