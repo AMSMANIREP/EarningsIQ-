@@ -5,7 +5,6 @@ openai>=1.60,<2
 pinecone>=5,<8
 rank-bm25>=0.2,<1
 streamlit>=1.40,<2
-plotly>=5.24,<7
 pandas>=2.2,<3
 python-dotenv>=1,<2
 pytest>=8,<9

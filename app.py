@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
 
 from agents.graph import run_query
@@ -17,24 +16,62 @@ ROOT = Path(__file__).parent
 METRICS_PATH = ROOT / "data" / "financial_metrics.json"
 PROMISES_PATH = ROOT / "data" / "management_promises.json"
 
-st.set_page_config(page_title="EarningsIQ", page_icon="📈", layout="wide")
+st.set_page_config(page_title="EarningsIQ", page_icon="💬", layout="wide")
 st.markdown(
     """
     <style>
-    .stApp {background: #07111f; color: #e8eef7;}
-    [data-testid="stSidebar"] {background: #0b1728; border-right: 1px solid #1f3148;}
-    .hero {padding: 1.2rem 1.4rem; border: 1px solid #20364f; border-radius: 18px;
-           background: linear-gradient(130deg,#0e2238,#102c33); margin-bottom: 1rem;}
-    .hero h1 {margin: 0; font-size: 2.2rem; color: #f7fbff;}
-    .hero p {margin: .35rem 0 0; color: #a9bdd2;}
-    div[data-testid="stMetric"] {background:#0e1d2e; border:1px solid #21374f;
-        border-radius:14px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.18);}
+    :root {color-scheme: dark;}
+    html, body, .stApp, [data-testid="stAppViewContainer"] {
+        background: #07111f; color: #e8eef7;
+    }
+    [data-testid="stHeader"] {background: rgba(7,17,31,.92);}
+    [data-testid="stSidebar"] {
+        background: #0b1728; border-right: 1px solid #263d56;
+    }
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] small,
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+        color: #dbe9f7 !important;
+    }
+    [data-testid="stSidebar"] [data-baseweb="select"] * {
+        color: #0a1726 !important;
+    }
+    [data-testid="stSidebar"] hr {border-color: #263d56;}
+    .hero {
+        padding: 1.05rem 1.3rem; border: 1px solid #294560; border-radius: 18px;
+        background: linear-gradient(130deg,#0e2238,#103139); margin-bottom: 1rem;
+        box-shadow: 0 12px 34px rgba(0,0,0,.2);
+    }
+    .hero h1 {margin: 0; font-size: 2.05rem; color: #f7fbff;}
+    .hero p {margin: .3rem 0 0; color: #b8cce0;}
+    button[data-baseweb="tab"] p {color: #a9bdd2 !important; font-weight: 650;}
+    button[data-baseweb="tab"][aria-selected="true"] p {color: #63e6b5 !important;}
+    div[data-testid="stMetric"] {
+        background:#0e1d2e; border:1px solid #294560; border-radius:14px;
+        padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+    }
+    div[data-testid="stMetricLabel"] p {color:#b8cce0 !important;}
     div[data-testid="stMetricValue"] {color:#62e6b5;}
+    [data-testid="stChatMessage"] {
+        background: #0d1b2a; border: 1px solid #233d57; border-radius: 16px;
+        padding: .35rem .65rem; margin-bottom: .7rem;
+    }
+    [data-testid="stChatInput"] {border-color:#31506e; background:#0d1b2a;}
+    .chat-intro {
+        background:#0d1b2a; border:1px solid #294560; border-radius:16px;
+        padding:1rem 1.15rem; margin:.25rem 0 1rem;
+    }
+    .chat-intro h3 {color:#f2f7fc; margin:0 0 .25rem;}
+    .chat-intro p {color:#adc3d8; margin:0;}
     .badge {display:inline-block; padding:.25rem .6rem; border-radius:999px;
         font-size:.8rem; font-weight:700; margin-right:.35rem;}
     .ok {background:#123c32;color:#78efc1}.warn {background:#4a3614;color:#ffd47a}
     .bad {background:#4a2029;color:#ff9aaa}.pending {background:#23334c;color:#a9c9ff}
-    .source-card {background:#0d1b2a;border:1px solid #21374f;border-radius:12px;padding:12px;}
+    .source-card {background:#0d1b2a;border:1px solid #294560;border-radius:12px;padding:12px;}
     </style>
     """,
     unsafe_allow_html=True,
@@ -62,6 +99,43 @@ def status_badge(status: str) -> str:
     return f'<span class="badge {css}">{status}</span>'
 
 
+def answer_question(question: str, company: str, quarter: str, settings, corpus: list[dict]) -> dict:
+    if not configured(settings):
+        return {
+            "role": "assistant",
+            "content": "The API configuration is incomplete. Restart Streamlit after saving all Nebius and Pinecone values in `.env`.",
+            "diagnostics": {"status": "configuration_required"},
+            "sources": [],
+        }
+    if not corpus:
+        return {
+            "role": "assistant",
+            "content": "No indexed report corpus is available. Run the ingestion commands and reload this page.",
+            "diagnostics": {"status": "indexing_required"},
+            "sources": [],
+        }
+    try:
+        with st.spinner("Searching quarterly reports and preparing a grounded answer…"):
+            result = run_query(RAGService(settings), question, company=company, quarter=quarter)
+        return {
+            "role": "assistant",
+            "content": result.answer,
+            "diagnostics": {"route": result.route, **result.diagnostics},
+            "sources": [
+                {"citation": source.citation, "text": source.text[:900]}
+                for source in result.sources
+            ],
+        }
+    except Exception as error:
+        logger.exception("Question failed")
+        return {
+            "role": "assistant",
+            "content": f"I could not complete that request: {error}",
+            "diagnostics": {"status": "error"},
+            "sources": [],
+        }
+
+
 metrics = load_metrics()
 settings = load_settings(validate=False)
 corpus = load_corpus(Path(settings.corpus_path))
@@ -69,35 +143,87 @@ companies = sorted(metrics)
 
 with st.sidebar:
     st.markdown("## EarningsIQ")
+    st.caption("Quarterly financial intelligence")
     company = st.selectbox("Company", companies, format_func=lambda key: metrics[key]["company_name"])
     quarters = list(metrics[company]["quarters"])
-    quarter = st.selectbox("Quarter", quarters, index=len(quarters) - 1)
-    st.markdown("### Available documents")
+    quarter = st.selectbox("Quarter context", quarters, index=len(quarters) - 1)
     documents = corpus_summary(corpus)
-    if documents:
-        for document in documents:
-            st.caption(f"✓ {document['source']} · {document['quarter']}")
-    else:
-        st.caption("No PDFs indexed locally")
-    st.markdown("### RAG system status")
+    ready = bool(configured(settings) and corpus)
+    st.divider()
+    st.markdown("### System status")
     st.markdown(
-        status_badge("Achieved" if configured(settings) and corpus else "Pending")
-        + (" Ready" if configured(settings) and corpus else " Needs credentials/indexed PDFs"),
+        status_badge("Achieved" if ready else "Pending")
+        + (" Ready for questions" if ready else " Restart or finish indexing"),
         unsafe_allow_html=True,
     )
     st.caption(f"Local chunks: {len(corpus):,}")
     st.caption(f"Pinecone index: {settings.index_name}")
+    with st.expander(f"Indexed documents ({len(documents)})", expanded=True):
+        if documents:
+            for document in documents:
+                st.markdown(f"✓ **{document['quarter']}**  \n{document['source']}")
+        else:
+            st.caption("No PDFs indexed locally")
 
 company_data = metrics[company]
 current = company_data["quarters"][quarter]
 st.markdown(
-    f'<div class="hero"><h1>EarningsIQ</h1><p>{company_data["company_name"]} · {quarter} · Agentic Hybrid RAG financial intelligence</p></div>',
+    f'<div class="hero"><h1>💬 EarningsIQ Assistant</h1><p>{company_data["company_name"]} · {quarter} · Answers grounded in indexed quarterly reports</p></div>',
     unsafe_allow_html=True,
 )
 
-tab_overview, tab_ask, tab_guidance, tab_sources = st.tabs(
-    ["Overview", "Ask Earnings AI", "Management Guidance", "Sources"]
+tab_chat, tab_overview, tab_guidance, tab_sources = st.tabs(
+    ["Q&A Bot", "Financial Snapshot", "Management Guidance", "Sources"]
 )
+
+with tab_chat:
+    st.markdown(
+        """<div class="chat-intro"><h3>Ask the earnings assistant</h3>
+        <p>Ask about performance, margins, risks, guidance, or changes between quarters. Answers include document and page citations.</p></div>""",
+        unsafe_allow_html=True,
+    )
+    suggestions = [
+        "How did Infosys perform in the latest quarter?",
+        "Why did operating margins change?",
+        "What risks did management mention?",
+        "Compare the last three quarters.",
+    ]
+    suggestion_columns = st.columns(4)
+    selected_question = None
+    for index, suggestion in enumerate(suggestions):
+        if suggestion_columns[index].button(suggestion, key=f"suggestion_{index}", width="stretch"):
+            selected_question = suggestion
+
+    if "chat_messages" not in st.session_state:
+        st.session_state.chat_messages = []
+    clear_column, context_column = st.columns([1, 5])
+    if clear_column.button("Clear chat", width="stretch"):
+        st.session_state.chat_messages = []
+        st.rerun()
+    context_column.caption(f"Current retrieval context: {company} · {quarter}")
+
+    for message in st.session_state.chat_messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message.get("diagnostics"):
+                with st.expander("Retrieval details"):
+                    st.json(message["diagnostics"])
+            if message.get("sources"):
+                with st.expander(f"Sources ({len(message['sources'])})"):
+                    for source_index, source in enumerate(message["sources"], start=1):
+                        st.markdown(f"**S{source_index}: {source['citation']}**")
+                        st.caption(source["text"])
+
+    typed_question = st.chat_input("Ask about this quarter or compare multiple quarters…")
+    question = typed_question or selected_question
+    if question:
+        st.session_state.chat_messages.append(
+            {"role": "user", "content": question, "context": f"{company} · {quarter}"}
+        )
+        st.session_state.chat_messages.append(
+            answer_question(question, company, quarter, settings, corpus)
+        )
+        st.rerun()
 
 with tab_overview:
     col1, col2, col3, col4 = st.columns(4)
@@ -105,82 +231,44 @@ with tab_overview:
     col2.metric("Net profit", f"₹{current['net_profit']:,} cr")
     col3.metric("Operating margin", f"{current['operating_margin']:.1f}%")
     col4.metric("Basic EPS", f"₹{current['eps']:.2f}")
-
-    frame = pd.DataFrame(
-        [{"Quarter": key, **value} for key, value in company_data["quarters"].items()]
-    )
-    left, right = st.columns(2)
-    with left:
-        revenue_fig = px.line(frame, x="Quarter", y="revenue", markers=True, title="Revenue trend (₹ crore)")
-        revenue_fig.update_layout(template="plotly_dark", paper_bgcolor="#07111f", plot_bgcolor="#07111f")
-        st.plotly_chart(revenue_fig, width="stretch")
-    with right:
-        profit_fig = px.line(frame, x="Quarter", y="net_profit", markers=True, title="Net profit trend (₹ crore)")
-        profit_fig.update_layout(template="plotly_dark", paper_bgcolor="#07111f", plot_bgcolor="#07111f")
-        st.plotly_chart(profit_fig, width="stretch")
-    margin_fig = px.bar(frame, x="Quarter", y="operating_margin", title="Operating margin trend (%)")
-    margin_fig.update_layout(template="plotly_dark", paper_bgcolor="#07111f", plot_bgcolor="#07111f")
-    st.plotly_chart(margin_fig, width="stretch")
     summary = (
         f"{company_data['company_name']} reported revenue of ₹{current['revenue']:,} crore in {quarter}, "
-        f"up {current['revenue_qoq_growth']:.1f}% sequentially. Net profit was ₹{current['net_profit']:,} "
-        f"crore and operating margin was {current['operating_margin']:.1f}%."
+        f"up {current['revenue_qoq_growth']:.1f}% sequentially and {current['revenue_yoy_growth']:.1f}% year over year. "
+        f"Net profit was ₹{current['net_profit']:,} crore, operating margin was "
+        f"{current['operating_margin']:.1f}%, and basic EPS was ₹{current['eps']:.2f}."
     )
     st.info(summary)
     if current.get("note"):
         st.caption(current["note"])
-
-with tab_ask:
-    st.markdown("### Ask questions grounded in quarterly reports")
-    example = st.selectbox(
-        "Try an example",
+    st.markdown("### Quarterly performance")
+    performance = pd.DataFrame(
         [
-            "How did Infosys perform in the latest quarter?",
-            "Why did operating margins change?",
-            "What risks did management mention?",
-            "Compare the last three quarters.",
-            "What guidance did management provide?",
-        ],
+            {
+                "Quarter": key,
+                "Period ended": value["period_end"],
+                "Revenue (₹ cr)": value["revenue"],
+                "Net profit (₹ cr)": value["net_profit"],
+                "Operating margin (%)": value["operating_margin"],
+                "Basic EPS (₹)": value["eps"],
+                "Revenue QoQ (%)": value["revenue_qoq_growth"],
+                "Revenue YoY (%)": value["revenue_yoy_growth"],
+            }
+            for key, value in company_data["quarters"].items()
+        ]
     )
-    question = st.chat_input("Ask EarningsIQ", key="earnings_chat")
-    if st.button("Ask selected example", width="content"):
-        question = example
-    if question:
-        with st.chat_message("user"):
-            st.write(question)
-        with st.chat_message("assistant"):
-            if not configured(settings):
-                st.warning("Add Nebius and Pinecone credentials/model names to .env to enable live answers.")
-            elif not corpus:
-                st.warning("Index at least one PDF before asking document-grounded questions.")
-            else:
-                try:
-                    with st.spinner("Running hybrid retrieval and grounded generation…"):
-                        result = run_query(
-                            RAGService(settings), question, company=company, quarter=quarter
-                        )
-                    st.markdown(result.answer)
-                    with st.expander("Retrieval diagnostics"):
-                        st.json({"route": result.route, **result.diagnostics})
-                    with st.expander("Retrieved sources"):
-                        for index, source in enumerate(result.sources, start=1):
-                            st.markdown(f"**S{index}: {source.citation}**")
-                            st.caption(source.text[:700])
-                except Exception as error:
-                    logger.exception("Question failed")
-                    st.error(f"The query could not be completed: {error}")
+    st.dataframe(performance, width="stretch", hide_index=True)
 
 with tab_guidance:
     st.markdown("### Management Promise Tracker")
     st.caption("Compares forward-looking statements with evidence from later indexed quarters.")
     promises = load_seeded_promises(PROMISES_PATH, company)
-    if st.button("Run AI promise review", disabled=not (configured(settings) and corpus)):
+    if st.button("Run AI promise review", disabled=not ready):
         with st.spinner("Reviewing guidance across quarters…"):
             generated = analyze_promises(settings, company=company)
             if generated:
                 promises = generated
-    if not configured(settings) or not corpus:
-        st.info("Showing seeded demonstration records. Live statuses require indexed reports and API credentials.")
+    if not ready:
+        st.info("Showing seeded demonstration records. Restart Streamlit after credentials and indexing are complete.")
     for promise in promises:
         with st.container(border=True):
             columns = st.columns([3, 1])

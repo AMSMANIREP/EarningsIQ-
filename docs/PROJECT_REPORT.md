@@ -46,7 +46,7 @@ The first company is Infosys. The dashboard includes structured IFRS-INR metrics
 
 ## Technology stack
 
-Python, Streamlit, Plotly, PyMuPDF, LangChain text splitters, Nebius OpenAI-compatible APIs, Pinecone, rank-bm25, and LangGraph. JSON/JSONL files provide structured metrics and the local sparse corpus.
+Python, Streamlit, PyMuPDF, LangChain text splitters, Nebius OpenAI-compatible APIs, Pinecone, rank-bm25, and LangGraph. JSON/JSONL files provide structured metrics and the local sparse corpus.
 
 ## Full system architecture
 
@@ -74,7 +74,7 @@ The tracker retrieves forward-looking statements and later results across quarte
 
 ## UI architecture
 
-The wide Streamlit interface provides a sidebar for company, quarter, documents, and system status. Overview contains KPI cards and Plotly trends; Ask Earnings AI shows chat answers and retrieval diagnostics; Management Guidance shows status badges; Sources lists page and chunk counts.
+The wide Streamlit interface opens on a persistent Q&A bot with suggested prompts, grounded chat history, citations, and retrieval diagnostics. Financial Snapshot contains KPI cards and a five-quarter data table without charts; Management Guidance shows status badges; Sources lists page and chunk counts. A consistent dark theme keeps sidebar labels and controls readable.
 
 ## Example questions
 

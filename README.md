@@ -69,7 +69,7 @@ For hybrid search, run normal ingestion for every PDF so the same chunks exist i
 streamlit run app.py
 ```
 
-The four tabs provide KPI trends, grounded Q&A with diagnostics, Management Promise Tracker statuses, and an indexed source inventory. Runtime events and failures are written to `logs/earningsiq.log` with rotation; logs and extracted document text are excluded from Git.
+The chat-first interface opens on a persistent Q&A bot with suggested questions, grounded citations, source excerpts, and retrieval diagnostics. The remaining tabs provide five-quarter KPI data without charts, Management Promise Tracker statuses, and an indexed source inventory. Runtime events and failures are written to `logs/earningsiq.log` with rotation; logs and extracted document text are excluded from Git.
 
 ## Retrieval controls
 

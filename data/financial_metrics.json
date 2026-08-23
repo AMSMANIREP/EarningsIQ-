@@ -3,6 +3,16 @@
     "company_name": "Infosys Limited",
     "currency": "INR crore",
     "quarters": {
+      "Q1_FY26": {
+        "period_end": "2025-06-30",
+        "revenue": 42279,
+        "net_profit": 6921,
+        "operating_margin": 20.8,
+        "eps": 16.70,
+        "revenue_qoq_growth": 3.3,
+        "revenue_yoy_growth": 7.5,
+        "source_url": "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q1/documents/fact-sheet.pdf"
+      },
       "Q2_FY26": {
         "period_end": "2025-09-30",
         "revenue": 44490,

@@ -1,5 +1,14 @@
 # Changelog
 
+## Chat-first interface — 2026-08-24
+
+- Made the persistent Q&A bot the first and default application view.
+- Added suggested prompts, clear-chat control, retained conversation history, citations, and diagnostics.
+- Fixed dark-theme text contrast in the sidebar, tabs, metrics, and chat controls.
+- Removed all charts and the Plotly dependency.
+- Replaced charts with a five-quarter financial performance table.
+- Added Q1 FY26 structured metrics so dashboard data aligns with all indexed quarters.
+
 ## Complete application — 2026-08-23
 
 - Added local JSONL corpus persistence with stable IDs shared with Pinecone.
