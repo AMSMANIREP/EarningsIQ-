@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from openai import OpenAI
 
@@ -12,6 +12,19 @@ from utils.config import Settings
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
+ProgressCallback = Callable[[str, dict[str, Any]], None]
+
+
+def _emit(
+    callback: ProgressCallback | None,
+    stage: str,
+    message: str,
+    **details: Any,
+) -> None:
+    if stage != "token":
+        logger.info("Progress stage=%s message=%s details=%s", stage, message, details)
+    if callback:
+        callback(stage, {"message": message, **details})
 
 
 @dataclass
@@ -40,14 +53,27 @@ class RAGService:
         *,
         company: str | None = None,
         quarter: str | None = None,
+        progress_callback: ProgressCallback | None = None,
     ) -> RAGAnswer:
+        _emit(
+            progress_callback,
+            "corpus",
+            "Loading the locally indexed document chunks.",
+        )
         corpus = load_corpus(Path(self.settings.corpus_path))
+        _emit(
+            progress_callback,
+            "corpus",
+            f"Loaded {len(corpus)} indexed chunks.",
+            corpus_chunks=len(corpus),
+        )
         if not corpus:
             return RAGAnswer(
                 answer="No indexed local corpus is available. Ingest at least one quarterly PDF first.",
                 diagnostics={"dense_used": False, "bm25_used": False, "reason": "empty_corpus"},
                 route=route,
             )
+
         fused, diagnostics = hybrid_search(
             question,
             corpus,
@@ -60,6 +86,14 @@ class RAGService:
             quarter=quarter,
             retrieve_k=self.settings.retrieve_k,
             fused_k=self.settings.fused_k,
+            progress_callback=progress_callback,
+        )
+
+        _emit(
+            progress_callback,
+            "rerank",
+            f"Reranking {len(fused)} fused candidates with the language model.",
+            candidates=len(fused),
         )
         final_chunks = rerank_results(
             question,
@@ -69,6 +103,13 @@ class RAGService:
             model=self.settings.chat_model,
             top_n=self.settings.final_k,
         )
+        _emit(
+            progress_callback,
+            "rerank",
+            f"Selected the {len(final_chunks)} strongest evidence chunks.",
+            selected_chunks=len(final_chunks),
+        )
+
         diagnostics["chunks_supplied_to_llm"] = len(final_chunks)
         diagnostics["reranker_used"] = len(fused) > self.settings.final_k
         if not final_chunks:
@@ -77,7 +118,20 @@ class RAGService:
                 diagnostics=diagnostics,
                 route=route,
             )
-        response = OpenAI(
+
+        _emit(
+            progress_callback,
+            "context",
+            f"Building a grounded prompt from {len(final_chunks)} cited evidence chunks.",
+            sources=len(final_chunks),
+        )
+        _emit(
+            progress_callback,
+            "generation",
+            f"Generating the grounded answer with {self.settings.chat_model}.",
+            model=self.settings.chat_model,
+        )
+        stream = OpenAI(
             api_key=self.settings.nebius_api_key,
             base_url=self.settings.nebius_base_url,
         ).chat.completions.create(
@@ -90,8 +144,26 @@ class RAGService:
                     "content": build_grounded_prompt(question, route, format_context(final_chunks)),
                 },
             ],
+            stream=True,
         )
-        answer = response.choices[0].message.content or "No answer was generated."
+        answer_parts: list[str] = []
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            token = chunk.choices[0].delta.content or ""
+            if not token:
+                continue
+            answer_parts.append(token)
+            _emit(progress_callback, "token", "", token=token)
+
+        answer = "".join(answer_parts).strip() or "No answer was generated."
+        diagnostics["generation_streamed"] = True
+        _emit(
+            progress_callback,
+            "complete",
+            f"Answer complete with {len(final_chunks)} cited sources.",
+            sources=len(final_chunks),
+        )
         logger.info(
             "Generated answer route=%s company=%s quarter=%s sources=%d",
             route,

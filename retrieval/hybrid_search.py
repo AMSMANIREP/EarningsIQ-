@@ -1,11 +1,24 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from retrieval.bm25_search import bm25_search
 from retrieval.vector_search import build_metadata_filter, dense_search, embed_query
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
+ProgressCallback = Callable[[str, dict[str, Any]], None]
+
+
+def _emit(
+    callback: ProgressCallback | None,
+    stage: str,
+    message: str,
+    **details: Any,
+) -> None:
+    if stage != "token":
+        logger.info("Progress stage=%s message=%s details=%s", stage, message, details)
+    if callback:
+        callback(stage, {"message": message, **details})
 
 
 @dataclass(frozen=True)
@@ -75,12 +88,34 @@ def hybrid_search(
     document_type: str | None = None,
     retrieve_k: int = 15,
     fused_k: int = 12,
+    progress_callback: ProgressCallback | None = None,
 ) -> tuple[list[HybridResult], dict]:
     metadata_filter = build_metadata_filter(
         company=company, quarter=quarter, document_type=document_type
     )
+    scope = ", ".join(f"{key}={value}" for key, value in metadata_filter.items())
+    _emit(
+        progress_callback,
+        "filter",
+        f"Applying document filters: {scope or 'all indexed documents'}.",
+        metadata_filter=metadata_filter,
+    )
+
+    _emit(
+        progress_callback,
+        "embedding",
+        f"Creating the query embedding with {embedding_model}.",
+        model=embedding_model,
+    )
     vector = embed_query(
         query, api_key=nebius_api_key, base_url=nebius_base_url, model=embedding_model
+    )
+
+    _emit(
+        progress_callback,
+        "dense_search",
+        f"Searching Pinecone index '{index_name}' for semantic matches.",
+        index_name=index_name,
     )
     dense = dense_search(
         vector,
@@ -89,8 +124,37 @@ def hybrid_search(
         top_k=retrieve_k,
         metadata_filter=metadata_filter,
     )
+    _emit(
+        progress_callback,
+        "dense_search",
+        f"Pinecone returned {len(dense)} semantic matches.",
+        dense_chunks=len(dense),
+    )
+
+    _emit(
+        progress_callback,
+        "bm25_search",
+        f"Running BM25 keyword search across {len(corpus)} local chunks.",
+        corpus_chunks=len(corpus),
+    )
     sparse = bm25_search(query, corpus, top_k=retrieve_k, metadata_filter=metadata_filter)
+
+    _emit(
+        progress_callback,
+        "fusion",
+        (
+            f"Fusing {len(dense)} semantic and {len(sparse)} keyword matches "
+            "with Reciprocal Rank Fusion."
+        ),
+    )
     fused = reciprocal_rank_fusion(dense, sparse, top_k=fused_k)
+    _emit(
+        progress_callback,
+        "fusion",
+        f"Selected {len(fused)} fused candidates for reranking.",
+        fused_chunks=len(fused),
+    )
+
     diagnostics = {
         "dense_used": True,
         "bm25_used": True,

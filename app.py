@@ -114,13 +114,44 @@ def answer_question(question: str, company: str, quarter: str, settings, corpus:
             "diagnostics": {"status": "indexing_required"},
             "sources": [],
         }
+
+    workflow: list[dict[str, str]] = []
+    streamed_parts: list[str] = []
+    status_widget = st.status("Starting the retrieval workflow…", expanded=True)
+    answer_placeholder = st.empty()
+
+    def report_progress(stage: str, payload: dict) -> None:
+        if stage == "token":
+            token = str(payload.get("token", ""))
+            if token:
+                streamed_parts.append(token)
+                answer_placeholder.markdown("".join(streamed_parts) + "▌")
+            return
+
+        message = str(payload.get("message", "")).strip()
+        if message:
+            workflow.append({"stage": stage, "message": message})
+            status_widget.update(label=message, state="running", expanded=True)
+            status_widget.write(message)
+
     try:
-        with st.spinner("Searching quarterly reports and preparing a grounded answer…"):
-            result = run_query(RAGService(settings), question, company=company, quarter=quarter)
+        result = run_query(
+            RAGService(settings),
+            question,
+            company=company,
+            quarter=quarter,
+            progress_callback=report_progress,
+        )
+        answer_placeholder.markdown(result.answer)
+        status_widget.update(label="Answer ready", state="complete", expanded=False)
         return {
             "role": "assistant",
             "content": result.answer,
-            "diagnostics": {"route": result.route, **result.diagnostics},
+            "diagnostics": {
+                "route": result.route,
+                "workflow": workflow,
+                **result.diagnostics,
+            },
             "sources": [
                 {"citation": source.citation, "text": source.text[:900]}
                 for source in result.sources
@@ -128,10 +159,12 @@ def answer_question(question: str, company: str, quarter: str, settings, corpus:
         }
     except Exception as error:
         logger.exception("Question failed")
+        status_widget.update(label="The workflow stopped with an error", state="error")
+        answer_placeholder.error(f"I could not complete that request: {error}")
         return {
             "role": "assistant",
             "content": f"I could not complete that request: {error}",
-            "diagnostics": {"status": "error"},
+            "diagnostics": {"status": "error", "workflow": workflow},
             "sources": [],
         }
 
@@ -217,12 +250,19 @@ with tab_chat:
     typed_question = st.chat_input("Ask about this quarter or compare multiple quarters…")
     question = typed_question or selected_question
     if question:
-        st.session_state.chat_messages.append(
-            {"role": "user", "content": question, "context": f"{company} · {quarter}"}
-        )
-        st.session_state.chat_messages.append(
-            answer_question(question, company, quarter, settings, corpus)
-        )
+        user_message = {
+            "role": "user",
+            "content": question,
+            "context": f"{company} · {quarter}",
+        }
+        st.session_state.chat_messages.append(user_message)
+        with st.chat_message("user"):
+            st.markdown(question)
+        with st.chat_message("assistant"):
+            assistant_message = answer_question(
+                question, company, quarter, settings, corpus
+            )
+        st.session_state.chat_messages.append(assistant_message)
         st.rerun()
 
 with tab_overview:

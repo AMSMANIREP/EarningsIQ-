@@ -1,5 +1,13 @@
 # Changelog
 
+## Streaming workflow — 2026-08-24
+
+- Replaced blocking LangGraph invocation with streamed graph updates.
+- Added live status messages for routing, corpus loading, metadata filtering, query embedding, Pinecone search, BM25 search, Reciprocal Rank Fusion, reranking, and context assembly.
+- Streamed Nebius answer tokens directly into the active assistant message.
+- Stored the completed workflow trace with each answer's retrieval diagnostics.
+- Added regression coverage for streamed route and service progress events.
+
 ## Chat-first interface — 2026-08-24
 
 - Made the persistent Q&A bot the first and default application view.
