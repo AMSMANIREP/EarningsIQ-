@@ -1,0 +1,28 @@
+{
+  "INFY": [
+    {
+      "category": "Revenue Guidance",
+      "promise": "FY26 constant-currency revenue growth guidance range",
+      "source_quarter": "Q2_FY26",
+      "evaluation": "Seeded demonstration record. Re-run AI analysis against indexed releases before relying on this status.",
+      "status": "Achieved",
+      "citation": "Infosys FY26 results | Q4_FY26 | official financial snapshot"
+    },
+    {
+      "category": "Margin Guidance",
+      "promise": "FY26 operating margin guidance range",
+      "source_quarter": "Q2_FY26",
+      "evaluation": "FY26 reported operating margin was 20.3%; revalidate the original guidance wording from indexed documents.",
+      "status": "Achieved",
+      "citation": "Infosys FY26 results | Q4_FY26 | official financial snapshot"
+    },
+    {
+      "category": "Hiring Outlook",
+      "promise": "Hiring and workforce outlook",
+      "source_quarter": "Q1_FY27",
+      "evaluation": "No subsequent-quarter evidence is included yet.",
+      "status": "Pending",
+      "citation": "Requires a later quarterly report"
+    }
+  ]
+}

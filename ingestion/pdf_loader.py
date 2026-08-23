@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-import fitz
+import pymupdf
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ def load_pdf(
     """Extract non-empty PDF pages while retaining one-based page numbers."""
     path = path.resolve()
     pages: list[PageDocument] = []
-    with fitz.open(path) as pdf:
+    with pymupdf.open(path) as pdf:
         for page_index, page in enumerate(pdf):
             text = page.get_text("text").strip()
             if not text:

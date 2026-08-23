@@ -1,6 +1,6 @@
 # EarningsIQ
 
-EarningsIQ is an Agentic Hybrid RAG application for analyzing quarterly financial reports of Indian listed companies. The repository currently implements **Phases 1–2**: page-aware ingestion, Nebius embeddings, Pinecone indexing, and filtered dense retrieval validation.
+EarningsIQ is an Agentic Hybrid RAG application for analyzing quarterly financial reports of Indian listed companies. It combines page-aware ingestion, Pinecone semantic search, local BM25, Reciprocal Rank Fusion, reranking, LangGraph routing, grounded Nebius generation, structured KPI dashboards, and a Management Promise Tracker.
 
 ## Phase 1 architecture
 
@@ -49,11 +49,41 @@ python query.py "How did revenue change?" --company INFY --quarter Q1_FY27 --top
 
 Each result shows its cosine score, stable chunk ID, source, quarter, one-based page, and text. Empty results usually mean the selected metadata does not match the values used during ingestion.
 
+## Complete application architecture
+
+`Question → LangGraph router → company/quarter filter → Pinecone + BM25 → RRF → Nebius reranker → grounded answer → citations`
+
+The dashboard reads obvious KPIs from `data/financial_metrics.json`; RAG is reserved for qualitative commentary, risks, guidance, and comparisons. This avoids asking an LLM to reproduce basic reported numbers.
+
+## Run the complete application
+
+Build the local corpus without API calls:
+
+```powershell
+python ingest.py data/infosys/q1.pdf --company INFY --quarter Q1_FY27 --financial-year FY27 --local-only
+```
+
+For hybrid search, run normal ingestion for every PDF so the same chunks exist in Pinecone and the local corpus. Then start the dashboard:
+
+```powershell
+streamlit run app.py
+```
+
+The four tabs provide KPI trends, grounded Q&A with diagnostics, Management Promise Tracker statuses, and an indexed source inventory. Runtime events and failures are written to `logs/earningsiq.log` with rotation; logs and extracted document text are excluded from Git.
+
+## Retrieval controls
+
+`RETRIEVE_K` controls candidates from each retriever, `FUSED_K` controls the RRF shortlist, and `FINAL_K` controls context supplied to the LLM. Defaults are 15, 12, and 6.
+
 ## Tests
 
-Run `pytest -q`. Tests cover deterministic chunk IDs and preservation of citation metadata. Live Nebius/Pinecone calls require user credentials and are intentionally not part of unit tests.
+```powershell
+pytest -q
+```
 
-## Planned phases
+Tests cover metadata, stable chunk IDs, corpus persistence, BM25 filtering, RRF behavior, query routing, citations, and promise status validation.
 
-BM25 comes next, followed by reciprocal-rank hybrid retrieval, reranking, grounded answers with citations, Streamlit, LangGraph routing, and the Management Promise Tracker. GraphRAG and automated NSE/BSE ingestion remain future enhancements and are not claimed as implemented.
+## Limitations and future work
+
+The repository does not include copyrighted quarterly PDFs or generated chunk text. Add the reports locally before enabling RAG. The seeded promise records are a transparent dashboard fallback and should be replaced by a live cross-quarter analysis for decisions. OCR, automatic NSE/BSE ingestion, GraphRAG/Neo4j, authentication, and deployment remain future enhancements; they are not claimed as implemented.
 

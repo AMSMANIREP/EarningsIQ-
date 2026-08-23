@@ -2,6 +2,9 @@ import argparse
 
 from retrieval.vector_search import build_metadata_filter, dense_search, embed_query
 from utils.config import load_settings
+from utils.logging_config import configure_logging, get_logger
+
+logger = get_logger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
@@ -15,7 +18,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    configure_logging()
     args = parse_args()
+    logger.info("Dense validation question=%r company=%s quarter=%s", args.question, args.company, args.quarter)
     settings = load_settings()
     metadata_filter = build_metadata_filter(
         company=args.company,

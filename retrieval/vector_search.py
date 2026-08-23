@@ -4,6 +4,10 @@ from typing import Any
 from openai import OpenAI
 from pinecone import Pinecone
 
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 @dataclass(frozen=True)
 class DenseSearchResult:
@@ -42,6 +46,7 @@ def embed_query(query: str, *, api_key: str, base_url: str, model: str) -> list[
     response = OpenAI(api_key=api_key, base_url=base_url).embeddings.create(
         model=model, input=[query]
     )
+    logger.info("Embedded query model=%s characters=%d", model, len(query))
     return response.data[0].embedding
 
 
@@ -70,5 +75,12 @@ def dense_search(
                 metadata=metadata,
             )
         )
+    logger.info(
+        "Dense search index=%s top_k=%d returned=%d filter=%s",
+        index_name,
+        top_k,
+        len(results),
+        metadata_filter,
+    )
     return results
 

@@ -1,0 +1,50 @@
+{
+  "INFY": {
+    "company_name": "Infosys Limited",
+    "currency": "INR crore",
+    "quarters": {
+      "Q2_FY26": {
+        "period_end": "2025-09-30",
+        "revenue": 44490,
+        "net_profit": 7364,
+        "operating_margin": 21.0,
+        "eps": 17.76,
+        "revenue_qoq_growth": 5.2,
+        "revenue_yoy_growth": 8.6,
+        "source_url": "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q2/documents/fact-sheet.pdf"
+      },
+      "Q3_FY26": {
+        "period_end": "2025-12-31",
+        "revenue": 45479,
+        "net_profit": 6654,
+        "operating_margin": 18.4,
+        "eps": 16.17,
+        "revenue_qoq_growth": 2.2,
+        "revenue_yoy_growth": 8.9,
+        "source_url": "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q3/documents/q3-2026.pdf",
+        "note": "Reported margin includes the Labour Codes impact; consult the source for adjusted measures."
+      },
+      "Q4_FY26": {
+        "period_end": "2026-03-31",
+        "revenue": 46402,
+        "net_profit": 8501,
+        "operating_margin": 21.0,
+        "eps": 21.01,
+        "revenue_qoq_growth": 2.0,
+        "revenue_yoy_growth": 13.4,
+        "source_url": "https://www.infosys.com/about/last-fiscal.html",
+        "note": "Net profit includes a tax provision reversal described by Infosys."
+      },
+      "Q1_FY27": {
+        "period_end": "2026-06-30",
+        "revenue": 48211,
+        "net_profit": 7769,
+        "operating_margin": 21.1,
+        "eps": 19.19,
+        "revenue_qoq_growth": 3.9,
+        "revenue_yoy_growth": 14.0,
+        "source_url": "https://www.infosys.com/about/last-quarter.html"
+      }
+    }
+  }
+}
