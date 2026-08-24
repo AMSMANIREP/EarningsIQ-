@@ -24,5 +24,25 @@
       "status": "Pending",
       "citation": "Requires a later quarterly report"
     }
+  ],
+  "TCS": [
+    {
+      "category": "Demand Outlook",
+      "promise": "Order-book conversion and demand outlook",
+      "source_quarter": "Q1_FY27",
+      "evaluation": "No subsequent-quarter evidence is included yet.",
+      "status": "Pending",
+      "citation": "TCS | q1-fy27-fact-sheet.pdf | Q1_FY27 | requires later evidence"
+    }
+  ],
+  "HDFCBANK": [
+    {
+      "category": "Balance Sheet Growth",
+      "promise": "Deposit and advances growth outlook",
+      "source_quarter": "Q1_FY27",
+      "evaluation": "No subsequent-quarter evidence is included yet.",
+      "status": "Pending",
+      "citation": "HDFCBANK | q1-fy27-financial-results.pdf | Q1_FY27 | requires later evidence"
+    }
   ]
 }

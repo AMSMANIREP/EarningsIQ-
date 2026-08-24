@@ -32,8 +32,11 @@ class HybridResult:
 
     @property
     def citation(self) -> str:
+        company = self.metadata.get("company")
+        company_prefix = f"{company} | " if company else ""
         return (
-            f"{self.metadata.get('source', 'unknown document')} | "
+            company_prefix
+            + f"{self.metadata.get('source', 'unknown document')} | "
             f"{self.metadata.get('quarter', 'unknown quarter')} | "
             f"page {self.metadata.get('page', '?')}"
         )

@@ -1,5 +1,15 @@
 # Changelog
 
+## Multi-company support — 2026-08-24
+
+- Added five-quarter structured KPI views for Infosys, TCS, and HDFC Bank.
+- Added a validated 15-document manifest and batch ingestion command.
+- Added company-aware source inventory, guidance seeds, and industry-specific KPI labels.
+- Added entity extraction so named single-company questions remain filtered and multi-company comparisons search across companies.
+- Added company tickers to citations and live retrieval-scope diagnostics.
+- Built and validated a 411-chunk local BM25 corpus across all three companies.
+- Added regression tests for manifests, banking KPIs, company extraction, and cross-company scope.
+
 ## Streaming workflow — 2026-08-24
 
 - Replaced blocking LangGraph invocation with streamed graph updates.

@@ -1,0 +1,107 @@
+[
+  {
+    "path": "infosys/q1-2026.pdf",
+    "company": "INFY",
+    "quarter": "Q1_FY26",
+    "financial_year": "FY26",
+    "document_type": "earnings_release"
+  },
+  {
+    "path": "infosys/q2-2026.pdf",
+    "company": "INFY",
+    "quarter": "Q2_FY26",
+    "financial_year": "FY26",
+    "document_type": "earnings_release"
+  },
+  {
+    "path": "infosys/q3-2026.pdf",
+    "company": "INFY",
+    "quarter": "Q3_FY26",
+    "financial_year": "FY26",
+    "document_type": "earnings_release"
+  },
+  {
+    "path": "infosys/additional-information-2025-26.pdf",
+    "company": "INFY",
+    "quarter": "Q4_FY26",
+    "financial_year": "FY26",
+    "document_type": "earnings_release"
+  },
+  {
+    "path": "infosys/q1-2027.pdf",
+    "company": "INFY",
+    "quarter": "Q1_FY27",
+    "financial_year": "FY27",
+    "document_type": "earnings_release"
+  },
+  {
+    "path": "tcs/q1-fy26-fact-sheet.pdf",
+    "company": "TCS",
+    "quarter": "Q1_FY26",
+    "financial_year": "FY26",
+    "document_type": "fact_sheet"
+  },
+  {
+    "path": "tcs/q2-fy26-fact-sheet.pdf",
+    "company": "TCS",
+    "quarter": "Q2_FY26",
+    "financial_year": "FY26",
+    "document_type": "fact_sheet"
+  },
+  {
+    "path": "tcs/q3-fy26-fact-sheet.pdf",
+    "company": "TCS",
+    "quarter": "Q3_FY26",
+    "financial_year": "FY26",
+    "document_type": "fact_sheet"
+  },
+  {
+    "path": "tcs/q4-fy26-fact-sheet.pdf",
+    "company": "TCS",
+    "quarter": "Q4_FY26",
+    "financial_year": "FY26",
+    "document_type": "fact_sheet"
+  },
+  {
+    "path": "tcs/q1-fy27-fact-sheet.pdf",
+    "company": "TCS",
+    "quarter": "Q1_FY27",
+    "financial_year": "FY27",
+    "document_type": "fact_sheet"
+  },
+  {
+    "path": "hdfcbank/q1-fy26-financial-results.pdf",
+    "company": "HDFCBANK",
+    "quarter": "Q1_FY26",
+    "financial_year": "FY26",
+    "document_type": "financial_results"
+  },
+  {
+    "path": "hdfcbank/q2-fy26-key-parameters.pdf",
+    "company": "HDFCBANK",
+    "quarter": "Q2_FY26",
+    "financial_year": "FY26",
+    "document_type": "key_parameters"
+  },
+  {
+    "path": "hdfcbank/q3-fy26-financial-results.pdf",
+    "company": "HDFCBANK",
+    "quarter": "Q3_FY26",
+    "financial_year": "FY26",
+    "document_type": "financial_results"
+  },
+  {
+    "path": "hdfcbank/q4-fy26-press-release.pdf",
+    "company": "HDFCBANK",
+    "quarter": "Q4_FY26",
+    "financial_year": "FY26",
+    "document_type": "press_release"
+  },
+  {
+    "path": "hdfcbank/q1-fy27-financial-results.pdf",
+    "company": "HDFCBANK",
+    "quarter": "Q1_FY27",
+    "financial_year": "FY27",
+    "document_type": "financial_results"
+  }
+]

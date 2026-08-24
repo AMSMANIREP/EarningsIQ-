@@ -1,6 +1,6 @@
 # EarningsIQ
 
-EarningsIQ is an Agentic Hybrid RAG application for analyzing quarterly financial reports of Indian listed companies. It combines page-aware ingestion, Pinecone semantic search, local BM25, Reciprocal Rank Fusion, reranking, LangGraph routing, grounded Nebius generation, structured KPI dashboards, and a Management Promise Tracker.
+EarningsIQ is an Agentic Hybrid RAG application for analyzing quarterly financial reports from Infosys, Tata Consultancy Services, and HDFC Bank. It combines page-aware ingestion, Pinecone semantic search, local BM25, Reciprocal Rank Fusion, reranking, entity-aware LangGraph routing, grounded Nebius generation, industry-specific KPI dashboards, and a Management Promise Tracker.
 
 ## Phase 1 architecture
 
@@ -13,21 +13,27 @@ Page numbers are one-based for human-readable citations. Stable chunk IDs make l
 1. Create a Python 3.11+ virtual environment.
 2. Run `pip install -r requirements.txt`.
 3. Copy `.env.example` to `.env` and enter your exact Nebius embedding model and API credentials.
-4. Put manually downloaded Infosys reports in `data/infosys/`.
+4. Put the reports in `data/infosys/`, `data/tcs/`, and `data/hdfcbank/` using the filenames listed in `data/company_documents.json`.
 
-Validate extraction without API usage:
-
-```powershell
-python ingest.py data/infosys/q1.pdf --company INFY --quarter Q1_FY27 --financial-year FY27 --dry-run
-```
-
-Index the document:
+Validate every available report without API usage:
 
 ```powershell
-python ingest.py data/infosys/q1.pdf --company INFY --quarter Q1_FY27 --financial-year FY27
+python ingest_all.py --dry-run
 ```
 
-Expected output resembles `Indexed 42 chunks from 12 pages into financial-rag`. Repeat for each of the 3–4 quarterly PDFs, changing quarter and financial year. The program creates the cosine Pinecone index using the embedding response dimension if it does not exist.
+Build only the local BM25 corpus:
+
+```powershell
+python ingest_all.py --local-only
+```
+
+After approving report-content transfer to the configured services, generate embeddings and populate Pinecone:
+
+```powershell
+python ingest_all.py
+```
+
+Use `--company TCS` or repeat `--company` to process selected companies. The original `ingest.py` command remains available for indexing one document.
 
 ## Metadata
 
@@ -35,7 +41,7 @@ Each vector stores `company`, `quarter`, `financial_year`, `document_type`, one-
 
 ## Validate dense retrieval
 
-After indexing at least one report, search all indexed Infosys quarters:
+After indexing at least one report, search all indexed quarters for one company:
 
 ```powershell
 python query.py "What risks did management mention?" --company INFY --top-k 5
@@ -53,23 +59,23 @@ Each result shows its cosine score, stable chunk ID, source, quarter, one-based 
 
 `Question → LangGraph router → company/quarter filter → Pinecone + BM25 → RRF → Nebius reranker → grounded answer → citations`
 
-The dashboard reads obvious KPIs from `data/financial_metrics.json`; RAG is reserved for qualitative commentary, risks, guidance, and comparisons. This avoids asking an LLM to reproduce basic reported numbers.
+The dashboard reads industry-aware KPIs from `data/financial_metrics.json`: revenue and margins for the IT-services companies, and total income, net profit, gross NPA, and EPS for HDFC Bank. RAG is reserved for qualitative commentary, risks, guidance, and same-company or cross-company comparisons.
 
 ## Run the complete application
 
-Build the local corpus without API calls:
+Build the complete three-company local corpus without API calls:
 
 ```powershell
-python ingest.py data/infosys/q1.pdf --company INFY --quarter Q1_FY27 --financial-year FY27 --local-only
+python ingest_all.py --local-only
 ```
 
-For hybrid search, run normal ingestion for every PDF so the same chunks exist in Pinecone and the local corpus. Then start the dashboard:
+For hybrid search, run approved normal ingestion so the same chunks exist in Pinecone and the local corpus. Then start the dashboard:
 
 ```powershell
 streamlit run app.py
 ```
 
-The chat-first interface opens on a persistent Q&A bot with suggested questions, grounded citations, source excerpts, and retrieval diagnostics. While answering, it shows the active routing, filtering, hybrid retrieval, fusion, reranking, and context-building stages, then streams generated answer tokens into the chat. The remaining tabs provide five-quarter KPI data without charts, Management Promise Tracker statuses, and an indexed source inventory. Runtime events and failures are written to `logs/earningsiq.log` with rotation; logs and extracted document text are excluded from Git.
+The chat-first interface opens on a persistent Q&A bot for Infosys, TCS, and HDFC Bank. A single named company keeps its metadata filter; mentioning two or more supported companies opens the comparison scope across those indexed reports. While answering, the app shows routing, entity scope, filtering, hybrid retrieval, fusion, reranking, and context-building stages, then streams generated tokens into the chat. The other tabs provide five-quarter industry-specific KPI data, guidance status, and the selected company's source inventory. Runtime events and failures are written to `logs/earningsiq.log`; logs, PDFs, and extracted text remain excluded from Git.
 
 ## Retrieval controls
 
@@ -81,7 +87,7 @@ The chat-first interface opens on a persistent Q&A bot with suggested questions,
 pytest -q
 ```
 
-Tests cover metadata, stable chunk IDs, corpus persistence, BM25 filtering, RRF behavior, query routing, citations, and promise status validation.
+Tests cover the three-company manifest and metrics, entity/quarter scope, stable chunk IDs, corpus persistence, BM25 filtering, RRF behavior, streaming, citations, and promise status validation.
 
 ## Limitations and future work
 

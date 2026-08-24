@@ -2,11 +2,11 @@
 
 ## Executive summary
 
-EarningsIQ will provide traceable financial intelligence from quarterly Indian-company reports. Phase 1 establishes the Infosys ingestion foundation; Phase 2 adds reusable dense retrieval with company, quarter, and document-type filtering.
+EarningsIQ provides traceable financial intelligence from quarterly reports for Infosys, Tata Consultancy Services, and HDFC Bank. A shared ingestion and retrieval design supports company, quarter, and document-type filtering without creating separate indexes.
 
 ## Problem and objective
 
-Quarterly disclosures contain numeric results and management commentary spread across pages and reports. The immediate objective is to turn three or four manually downloaded PDFs into consistent, searchable vector records without losing source or page provenance.
+Quarterly disclosures contain numeric results and management commentary spread across pages and reports. The implemented objective is to turn 15 manually supplied PDFs covering three companies and five quarters into consistent, searchable records without losing company, source, quarter, or page provenance.
 
 ## Technology and architecture
 
@@ -30,7 +30,7 @@ Unit tests validate deterministic chunking and provenance. End-to-end indexing r
 
 ## Roadmap
 
-After live dense retrieval is validated: BM25, reciprocal rank fusion, reranking, grounded generation, Streamlit, LangGraph routing, and the Management Promise Tracker. Future GraphRAG could connect Company → Quarter → Guidance → Expected Metric → Future Actual Metric using Neo4j. Automated NSE/BSE ingestion is deferred.
+BM25, Reciprocal Rank Fusion, reranking, grounded generation, Streamlit, entity-aware LangGraph routing, streaming, and the Management Promise Tracker are implemented. Future GraphRAG could connect Company → Quarter → Guidance → Expected Metric → Future Actual Metric using Neo4j. Automated NSE/BSE ingestion is deferred.
 
 ## Conclusion
 
@@ -42,7 +42,7 @@ The objectives are traceable report analysis, cross-quarter comparison, retrieva
 
 ## Dataset and documents used
 
-The first company is Infosys. The dashboard includes structured IFRS-INR metrics for Q2 FY26 through Q1 FY27 sourced from official Infosys releases. Quarterly PDFs are intentionally user-supplied and excluded from Git; the Sources tab reports exactly what has been indexed.
+The dataset covers Infosys, TCS, and HDFC Bank from Q1 FY26 through Q1 FY27. The dashboard uses revenue and margin KPIs for the IT-services companies and banking-specific total income, net profit, gross NPA, and EPS for HDFC Bank. The 15 PDFs are user-supplied and excluded from Git; a tracked manifest records their normalized metadata, and the Sources tab reports exactly what is indexed.
 
 ## Technology stack
 
@@ -50,7 +50,7 @@ Python, Streamlit, PyMuPDF, LangChain text splitters, Nebius OpenAI-compatible A
 
 ## Full system architecture
 
-A LangGraph router assigns FINANCIAL_QUERY, DOCUMENT_QUERY, or COMPARISON_QUERY. Metadata filters constrain Pinecone and BM25. Reciprocal Rank Fusion combines rankings, Nebius reranks the shortlist, and a grounded prompt generates an answer with source labels. Rotating logs capture ingestion, retrieval, routing, generation, and errors.
+A LangGraph router assigns FINANCIAL_QUERY, DOCUMENT_QUERY, or COMPARISON_QUERY and extracts supported company and quarter mentions. One named company remains filtered; multiple named companies open a cross-company scope. Metadata filters constrain Pinecone and BM25, RRF combines rankings, Nebius reranks the shortlist, and a grounded prompt generates an answer with company-aware source labels. Rotating logs capture ingestion, scope, retrieval, routing, generation, and errors.
 
 ## Dense retrieval, BM25, and Reciprocal Rank Fusion
 
@@ -62,7 +62,7 @@ The default flow retrieves 15 candidates per retriever, fuses to 12, and asks th
 
 ## LangGraph agentic routing
 
-A deliberately small graph routes three question types to a shared evidence workflow with route-specific prompt instructions. This demonstrates agentic control flow without unnecessary multi-agent complexity.
+A deliberately small graph routes three question types to a shared streamed evidence workflow. Entity extraction selects company and quarter scope before retrieval, enabling both same-company longitudinal analysis and explicit cross-company comparisons without unnecessary multi-agent complexity.
 
 ## Prompt and grounding design
 
@@ -74,11 +74,11 @@ The tracker retrieves forward-looking statements and later results across quarte
 
 ## UI architecture
 
-The wide Streamlit interface opens on a persistent Q&A bot with suggested prompts, grounded chat history, citations, and retrieval diagnostics. Financial Snapshot contains KPI cards and a five-quarter data table without charts; Management Guidance shows status badges; Sources lists page and chunk counts. A consistent dark theme keeps sidebar labels and controls readable.
+The wide Streamlit interface opens on a persistent Q&A bot with a three-company selector, suggested prompts, grounded chat history, company-aware citations, streaming, and retrieval diagnostics. Financial Snapshot renders four industry-specific KPIs and a five-quarter table without charts; Management Guidance shows status badges; Sources lists the selected company's page and chunk counts.
 
 ## Example questions
 
-How did Infosys perform in the latest quarter? Why did margins change? What risks did management mention? Compare the last three quarters. What guidance was provided? Was earlier guidance achieved?
+How did Infosys perform in the latest quarter? Compare Infosys, TCS, and HDFC Bank in Q1 FY27. How did HDFC Bank's gross NPA change? Why did TCS margins change? What risks did management mention? Was earlier guidance achieved?
 
 ## Screenshot placeholders
 
@@ -86,7 +86,7 @@ Add final screenshots of the Overview, Ask Earnings AI diagnostics, Promise Trac
 
 ## Limitations
 
-Scanned PDFs need OCR. Retrieval quality depends on the selected reports. Live APIs require user credentials. Seeded tracker records are not a substitute for live analysis. The app is research support, not investment advice.
+Scanned PDFs need OCR; the supplied image-only HDFC Bank Q4 results are therefore represented by the extractable Q4 press release. Retrieval quality depends on the selected reports. Live API indexing requires credentials and explicit approval to transfer extracted report text. Seeded tracker records are not a substitute for live analysis. The app is research support, not investment advice.
 
 ## Future GraphRAG architecture
 

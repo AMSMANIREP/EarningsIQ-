@@ -82,6 +82,68 @@ st.markdown(
 def load_metrics() -> dict:
     return json.loads(METRICS_PATH.read_text(encoding="utf-8"))
 
+def format_kpi_value(kpi: dict, value: float | int) -> str:
+    decimals = int(kpi.get("decimals", 0))
+    formatted = f"{value:,.{decimals}f}"
+    unit = kpi.get("unit")
+    if unit == "currency":
+        return f"₹{formatted} cr"
+    if unit == "percent":
+        return f"{formatted}%"
+    if unit == "rupees":
+        return f"₹{formatted}"
+    return formatted
+
+
+def kpi_table_label(kpi: dict) -> str:
+    suffix = {
+        "currency": " (₹ cr)",
+        "percent": " (%)",
+        "rupees": " (₹)",
+    }.get(kpi.get("unit"), "")
+    return f"{kpi['label']}{suffix}"
+
+
+def build_company_summary(company_data: dict, quarter: str, current: dict) -> str:
+    kpis = company_data["kpis"]
+    primary = kpis[0]
+    growth_metric = company_data["growth_metric"]
+    qoq = current.get(f"{growth_metric}_qoq_growth")
+    yoy = current.get(f"{growth_metric}_yoy_growth")
+    growth_parts = []
+    if qoq is not None:
+        growth_parts.append(f"{qoq:+.1f}% sequentially")
+    if yoy is not None:
+        growth_parts.append(f"{yoy:+.1f}% year over year")
+    growth_text = f", {' and '.join(growth_parts)}" if growth_parts else ""
+
+    other_metrics = ", ".join(
+        f"{kpi['label'].lower()} was {format_kpi_value(kpi, current[kpi['key']])}"
+        for kpi in kpis[1:]
+    )
+    return (
+        f"{company_data['company_name']} reported {primary['label'].lower()} of "
+        f"{format_kpi_value(primary, current[primary['key']])} in {quarter}{growth_text}. "
+        f"{other_metrics.capitalize()}."
+    )
+
+
+def performance_rows(company_data: dict) -> list[dict]:
+    growth_metric = company_data["growth_metric"]
+    growth_label = company_data["growth_label"]
+    rows = []
+    for quarter_name, values in company_data["quarters"].items():
+        row = {"Quarter": quarter_name, "Period ended": values["period_end"]}
+        for kpi in company_data["kpis"]:
+            row[kpi_table_label(kpi)] = values[kpi["key"]]
+        row[f"{growth_label} QoQ (%)"] = values.get(
+            f"{growth_metric}_qoq_growth"
+        )
+        row[f"{growth_label} YoY (%)"] = values.get(
+            f"{growth_metric}_yoy_growth"
+        )
+        rows.append(row)
+    return rows
 
 def configured(settings) -> bool:
     return all(
@@ -172,31 +234,45 @@ def answer_question(question: str, company: str, quarter: str, settings, corpus:
 metrics = load_metrics()
 settings = load_settings(validate=False)
 corpus = load_corpus(Path(settings.corpus_path))
-companies = sorted(metrics)
+companies = list(metrics)
+
+all_documents = corpus_summary(corpus)
 
 with st.sidebar:
     st.markdown("## EarningsIQ")
     st.caption("Quarterly financial intelligence")
-    company = st.selectbox("Company", companies, format_func=lambda key: metrics[key]["company_name"])
+    company = st.selectbox(
+        "Company",
+        companies,
+        format_func=lambda key: metrics[key]["company_name"],
+    )
     quarters = list(metrics[company]["quarters"])
     quarter = st.selectbox("Quarter context", quarters, index=len(quarters) - 1)
-    documents = corpus_summary(corpus)
-    ready = bool(configured(settings) and corpus)
+    documents = [
+        document for document in all_documents if document["company"] == company
+    ]
+    company_chunks = sum(document["chunks"] for document in documents)
+    ready = bool(configured(settings) and documents)
     st.divider()
     st.markdown("### System status")
     st.markdown(
         status_badge("Achieved" if ready else "Pending")
-        + (" Ready for questions" if ready else " Restart or finish indexing"),
+        + (
+            " Ready for selected company"
+            if ready
+            else " Selected company needs indexing"
+        ),
         unsafe_allow_html=True,
     )
-    st.caption(f"Local chunks: {len(corpus):,}")
+    st.caption(f"Selected-company chunks: {company_chunks:,}")
+    st.caption(f"All local chunks: {len(corpus):,}")
     st.caption(f"Pinecone index: {settings.index_name}")
     with st.expander(f"Indexed documents ({len(documents)})", expanded=True):
         if documents:
             for document in documents:
                 st.markdown(f"✓ **{document['quarter']}**  \n{document['source']}")
         else:
-            st.caption("No PDFs indexed locally")
+            st.caption("No PDFs indexed locally for this company")
 
 company_data = metrics[company]
 current = company_data["quarters"][quarter]
@@ -216,10 +292,10 @@ with tab_chat:
         unsafe_allow_html=True,
     )
     suggestions = [
-        "How did Infosys perform in the latest quarter?",
-        "Why did operating margins change?",
-        "What risks did management mention?",
-        "Compare the last three quarters.",
+        f"How did {company_data['company_name']} perform in {quarter}?",
+        "Compare Infosys, TCS, and HDFC Bank in Q1 FY27.",
+        f"What risks did {company_data['company_name']} mention?",
+        f"Compare the last three quarters for {company_data['company_name']}.",
     ]
     suggestion_columns = st.columns(4)
     selected_question = None
@@ -266,36 +342,24 @@ with tab_chat:
         st.rerun()
 
 with tab_overview:
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Revenue", f"₹{current['revenue']:,} cr", f"{current['revenue_qoq_growth']:.1f}% QoQ")
-    col2.metric("Net profit", f"₹{current['net_profit']:,} cr")
-    col3.metric("Operating margin", f"{current['operating_margin']:.1f}%")
-    col4.metric("Basic EPS", f"₹{current['eps']:.2f}")
-    summary = (
-        f"{company_data['company_name']} reported revenue of ₹{current['revenue']:,} crore in {quarter}, "
-        f"up {current['revenue_qoq_growth']:.1f}% sequentially and {current['revenue_yoy_growth']:.1f}% year over year. "
-        f"Net profit was ₹{current['net_profit']:,} crore, operating margin was "
-        f"{current['operating_margin']:.1f}%, and basic EPS was ₹{current['eps']:.2f}."
-    )
-    st.info(summary)
+    kpi_columns = st.columns(len(company_data["kpis"]))
+    growth_key = f"{company_data['growth_metric']}_qoq_growth"
+    for index, (column, kpi) in enumerate(
+        zip(kpi_columns, company_data["kpis"], strict=True)
+    ):
+        delta_value = current.get(growth_key) if index == 0 else None
+        delta = f"{delta_value:+.1f}% QoQ" if delta_value is not None else None
+        column.metric(
+            kpi["label"],
+            format_kpi_value(kpi, current[kpi["key"]]),
+            delta,
+        )
+
+    st.info(build_company_summary(company_data, quarter, current))
     if current.get("note"):
         st.caption(current["note"])
     st.markdown("### Quarterly performance")
-    performance = pd.DataFrame(
-        [
-            {
-                "Quarter": key,
-                "Period ended": value["period_end"],
-                "Revenue (₹ cr)": value["revenue"],
-                "Net profit (₹ cr)": value["net_profit"],
-                "Operating margin (%)": value["operating_margin"],
-                "Basic EPS (₹)": value["eps"],
-                "Revenue QoQ (%)": value["revenue_qoq_growth"],
-                "Revenue YoY (%)": value["revenue_yoy_growth"],
-            }
-            for key, value in company_data["quarters"].items()
-        ]
-    )
+    performance = pd.DataFrame(performance_rows(company_data))
     st.dataframe(performance, width="stretch", hide_index=True)
 
 with tab_guidance:
@@ -309,6 +373,8 @@ with tab_guidance:
                 promises = generated
     if not ready:
         st.info("Showing seeded demonstration records. Restart Streamlit after credentials and indexing are complete.")
+    if not promises:
+        st.info("No seeded management promises are available for this company yet.")
     for promise in promises:
         with st.container(border=True):
             columns = st.columns([3, 1])
@@ -323,11 +389,21 @@ with tab_sources:
     if documents:
         st.dataframe(pd.DataFrame(documents), width="stretch", hide_index=True)
     else:
-        st.warning("No local source corpus exists yet. Add PDFs under data/infosys and run ingest.py.")
+        st.warning(
+            f"No local source corpus exists for {company_data['company_name']}. "
+            "Run ingest_all.py with --local-only and reload the page."
+        )
     st.markdown("### Structured KPI sources")
     for quarter_name, values in company_data["quarters"].items():
+        source_file = values.get("source_file", "Source document")
+        source_url = values.get("source_url")
+        source_reference = (
+            f'<a href="{source_url}">Official company source</a> · {source_file}'
+            if source_url
+            else source_file
+        )
         st.markdown(
-            f'<div class="source-card"><b>{quarter_name}</b> · period ended {values["period_end"]}<br>'
-            f'<a href="{values["source_url"]}">Official Infosys source</a></div><br>',
+            f'<div class="source-card"><b>{quarter_name}</b> · '
+            f'period ended {values["period_end"]}<br>{source_reference}</div><br>',
             unsafe_allow_html=True,
         )

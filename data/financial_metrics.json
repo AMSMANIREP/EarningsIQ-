@@ -1,7 +1,16 @@
 {
   "INFY": {
     "company_name": "Infosys Limited",
+    "industry": "IT services",
     "currency": "INR crore",
+    "growth_metric": "revenue",
+    "growth_label": "Revenue",
+    "kpis": [
+      {"key": "revenue", "label": "Revenue", "unit": "currency", "decimals": 0},
+      {"key": "net_profit", "label": "Net profit", "unit": "currency", "decimals": 0},
+      {"key": "operating_margin", "label": "Operating margin", "unit": "percent", "decimals": 1},
+      {"key": "eps", "label": "Basic EPS", "unit": "rupees", "decimals": 2}
+    ],
     "quarters": {
       "Q1_FY26": {
         "period_end": "2025-06-30",
@@ -11,6 +20,7 @@
         "eps": 16.70,
         "revenue_qoq_growth": 3.3,
         "revenue_yoy_growth": 7.5,
+        "source_file": "q1-2026.pdf",
         "source_url": "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q1/documents/fact-sheet.pdf"
       },
       "Q2_FY26": {
@@ -21,6 +31,7 @@
         "eps": 17.76,
         "revenue_qoq_growth": 5.2,
         "revenue_yoy_growth": 8.6,
+        "source_file": "q2-2026.pdf",
         "source_url": "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q2/documents/fact-sheet.pdf"
       },
       "Q3_FY26": {
@@ -31,6 +42,7 @@
         "eps": 16.17,
         "revenue_qoq_growth": 2.2,
         "revenue_yoy_growth": 8.9,
+        "source_file": "q3-2026.pdf",
         "source_url": "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q3/documents/q3-2026.pdf",
         "note": "Reported margin includes the Labour Codes impact; consult the source for adjusted measures."
       },
@@ -42,6 +54,7 @@
         "eps": 21.01,
         "revenue_qoq_growth": 2.0,
         "revenue_yoy_growth": 13.4,
+        "source_file": "additional-information-2025-26.pdf",
         "source_url": "https://www.infosys.com/about/last-fiscal.html",
         "note": "Net profit includes a tax provision reversal described by Infosys."
       },
@@ -53,7 +66,144 @@
         "eps": 19.19,
         "revenue_qoq_growth": 3.9,
         "revenue_yoy_growth": 14.0,
+        "source_file": "q1-2027.pdf",
         "source_url": "https://www.infosys.com/about/last-quarter.html"
+      }
+    }
+  },
+  "TCS": {
+    "company_name": "Tata Consultancy Services",
+    "industry": "IT services",
+    "currency": "INR crore",
+    "growth_metric": "revenue",
+    "growth_label": "Revenue",
+    "kpis": [
+      {"key": "revenue", "label": "Revenue", "unit": "currency", "decimals": 0},
+      {"key": "net_profit", "label": "Net income", "unit": "currency", "decimals": 0},
+      {"key": "operating_margin", "label": "Operating margin", "unit": "percent", "decimals": 1},
+      {"key": "net_margin", "label": "Net margin", "unit": "percent", "decimals": 1}
+    ],
+    "quarters": {
+      "Q1_FY26": {
+        "period_end": "2025-06-30",
+        "revenue": 63437,
+        "net_profit": 12760,
+        "operating_margin": 24.5,
+        "net_margin": 20.1,
+        "revenue_qoq_growth": -1.6,
+        "revenue_yoy_growth": 1.3,
+        "source_file": "q1-fy26-fact-sheet.pdf"
+      },
+      "Q2_FY26": {
+        "period_end": "2025-09-30",
+        "revenue": 65799,
+        "net_profit": 12904,
+        "operating_margin": 25.2,
+        "net_margin": 19.6,
+        "revenue_qoq_growth": 3.7,
+        "revenue_yoy_growth": 2.4,
+        "source_file": "q2-fy26-fact-sheet.pdf",
+        "note": "Operating income and margin exclude the one-off restructuring expense disclosed by TCS."
+      },
+      "Q3_FY26": {
+        "period_end": "2025-12-31",
+        "revenue": 67087,
+        "net_profit": 13438,
+        "operating_margin": 25.2,
+        "net_margin": 20.0,
+        "revenue_qoq_growth": 2.0,
+        "revenue_yoy_growth": 4.9,
+        "source_file": "q3-fy26-fact-sheet.pdf",
+        "note": "Operating income and margin exclude exceptional items disclosed by TCS."
+      },
+      "Q4_FY26": {
+        "period_end": "2026-03-31",
+        "revenue": 70698,
+        "net_profit": 13718,
+        "operating_margin": 25.3,
+        "net_margin": 19.4,
+        "revenue_qoq_growth": 5.4,
+        "revenue_yoy_growth": 9.6,
+        "source_file": "q4-fy26-fact-sheet.pdf"
+      },
+      "Q1_FY27": {
+        "period_end": "2026-06-30",
+        "revenue": 72275,
+        "net_profit": 13849,
+        "operating_margin": 24.0,
+        "net_margin": 19.2,
+        "revenue_qoq_growth": 2.2,
+        "revenue_yoy_growth": 13.9,
+        "source_file": "q1-fy27-fact-sheet.pdf",
+        "note": "Net and operating income figures in the growth summary exclude exceptional items."
+      }
+    }
+  },
+  "HDFCBANK": {
+    "company_name": "HDFC Bank Limited",
+    "industry": "Banking",
+    "currency": "INR crore",
+    "growth_metric": "total_income",
+    "growth_label": "Total income",
+    "kpis": [
+      {"key": "total_income", "label": "Total income", "unit": "currency", "decimals": 2},
+      {"key": "net_profit", "label": "Net profit", "unit": "currency", "decimals": 2},
+      {"key": "gross_npa", "label": "Gross NPA", "unit": "percent", "decimals": 2},
+      {"key": "eps", "label": "Basic EPS", "unit": "rupees", "decimals": 2}
+    ],
+    "quarters": {
+      "Q1_FY26": {
+        "period_end": "2025-06-30",
+        "total_income": 99200.03,
+        "net_profit": 18155.21,
+        "gross_npa": 1.40,
+        "eps": 11.86,
+        "total_income_qoq_growth": 10.85,
+        "total_income_yoy_growth": 18.52,
+        "source_file": "q1-fy26-financial-results.pdf",
+        "note": "Basic EPS is shown on the bonus-adjusted comparative basis disclosed in the Q1 FY27 results."
+      },
+      "Q2_FY26": {
+        "period_end": "2025-09-30",
+        "total_income": 91040.72,
+        "net_profit": 18641.28,
+        "gross_npa": 1.24,
+        "eps": 12.14,
+        "total_income_qoq_growth": -8.22,
+        "total_income_yoy_growth": null,
+        "source_file": "q2-fy26-key-parameters.pdf + q3-fy26-financial-results.pdf",
+        "note": "Income, profit, and EPS are from the Q3 FY26 comparative results; the supplied Q2 file provides operating parameters."
+      },
+      "Q3_FY26": {
+        "period_end": "2025-12-31",
+        "total_income": 90005.00,
+        "net_profit": 18653.75,
+        "gross_npa": 1.24,
+        "eps": 12.13,
+        "total_income_qoq_growth": -1.14,
+        "total_income_yoy_growth": 2.91,
+        "source_file": "q3-fy26-financial-results.pdf"
+      },
+      "Q4_FY26": {
+        "period_end": "2026-03-31",
+        "total_income": 89808.90,
+        "net_profit": 19221.05,
+        "gross_npa": 1.15,
+        "eps": 12.49,
+        "total_income_qoq_growth": -0.22,
+        "total_income_yoy_growth": 0.36,
+        "source_file": "q4-fy26-press-release.pdf",
+        "note": "The supplied press release is used because the separate Q4 financial-results PDF has no extractable text."
+      },
+      "Q1_FY27": {
+        "period_end": "2026-06-30",
+        "total_income": 92184.38,
+        "net_profit": 19059.72,
+        "gross_npa": 1.17,
+        "eps": 12.38,
+        "total_income_qoq_growth": 2.65,
+        "total_income_yoy_growth": -7.07,
+        "source_file": "q1-fy27-financial-results.pdf"
       }
     }
   }

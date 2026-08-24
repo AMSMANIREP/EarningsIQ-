@@ -2,9 +2,24 @@ import re
 
 COMPARISON_TERMS = re.compile(r"\b(compare|comparison|versus|vs\.?|between|qoq|yoy|changed?)\b", re.I)
 FINANCIAL_TERMS = re.compile(
-    r"\b(revenue|profit|margin|eps|growth|income|cash|deal value|headcount|attrition)\b",
+    r"\b(revenue|profit|margin|eps|growth|income|cash|deal value|headcount|attrition|"
+    r"deposit|advances?|npa|interest|assets?)\b",
     re.I,
 )
+COMPANY_PATTERNS = {
+    "INFY": re.compile(r"\b(infosys|infy)\b", re.I),
+    "TCS": re.compile(r"\b(tcs|tata consultancy services)\b", re.I),
+    "HDFCBANK": re.compile(r"\b(hdfc\s*bank|hdfcbank)\b", re.I),
+}
+
+
+def extract_companies(question: str) -> list[str]:
+    matches = []
+    for company, pattern in COMPANY_PATTERNS.items():
+        match = pattern.search(question)
+        if match:
+            matches.append((match.start(), company))
+    return [company for _, company in sorted(matches)]
 
 
 def classify_query(question: str) -> str:

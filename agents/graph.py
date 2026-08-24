@@ -2,7 +2,7 @@ from typing import Any, Callable, TypedDict
 
 from langgraph.graph import END, StateGraph
 
-from agents.router import classify_query
+from agents.router import classify_query, extract_companies, extract_quarters
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -36,12 +36,39 @@ def build_query_graph(
         return {**state, "route": route}
 
     def execute_node(state: QueryState) -> QueryState:
-        kwargs = {
-            "company": state.get("company"),
-            "quarter": (
-                None if state["route"] == "COMPARISON_QUERY" else state.get("quarter")
-            ),
-        }
+        mentioned_companies = extract_companies(state["question"])
+        mentioned_quarters = extract_quarters(state["question"])
+
+        if len(mentioned_companies) == 1:
+            company_scope = mentioned_companies[0]
+        elif len(mentioned_companies) > 1:
+            company_scope = None
+        else:
+            company_scope = state.get("company")
+
+        if len(mentioned_quarters) == 1:
+            quarter_scope = mentioned_quarters[0]
+        elif state["route"] == "COMPARISON_QUERY" or len(mentioned_quarters) > 1:
+            quarter_scope = None
+        else:
+            quarter_scope = state.get("quarter")
+
+        if progress_callback:
+            company_label = company_scope or "all indexed companies"
+            quarter_label = quarter_scope or "all indexed quarters"
+            progress_callback(
+                "scope",
+                {
+                    "message": (
+                        f"Retrieval scope: {company_label}, {quarter_label}."
+                    ),
+                    "company": company_scope,
+                    "quarter": quarter_scope,
+                    "mentioned_companies": mentioned_companies,
+                },
+            )
+
+        kwargs = {"company": company_scope, "quarter": quarter_scope}
         if progress_callback:
             kwargs["progress_callback"] = progress_callback
         result = executor(state["question"], state["route"], **kwargs)

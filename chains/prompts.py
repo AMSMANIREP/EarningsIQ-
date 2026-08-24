@@ -1,7 +1,8 @@
 ROUTE_INSTRUCTIONS = {
     "FINANCIAL_QUERY": "Focus on reported metrics, units, period labels, and changes.",
     "DOCUMENT_QUERY": "Focus on management commentary, risks, outlook, and qualitative evidence.",
-    "COMPARISON_QUERY": "Compare periods explicitly and distinguish each quarter's evidence.",
+    "COMPARISON_QUERY": "Compare companies and/or periods explicitly, and distinguish each "
+    "company's and quarter's evidence.",
 }
 
 GROUNDED_SYSTEM_PROMPT = """You are EarningsIQ, a careful financial research assistant.
