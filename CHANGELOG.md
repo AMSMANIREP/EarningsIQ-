@@ -9,6 +9,8 @@
 - Added company tickers to citations and live retrieval-scope diagnostics.
 - Built and validated a 411-chunk local BM25 corpus across all three companies.
 - Added regression tests for manifests, banking KPIs, company extraction, and cross-company scope.
+- Indexed and validated 325 TCS and HDFC Bank chunks in the configured Pinecone index.
+- Fixed Windows UTF-8 console output for financial-report symbols during retrieval validation.
 
 ## Streaming workflow — 2026-08-24
 

@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 from retrieval.vector_search import build_metadata_filter, dense_search, embed_query
 from utils.config import load_settings
@@ -18,6 +19,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     configure_logging()
     args = parse_args()
     logger.info("Dense validation question=%r company=%s quarter=%s", args.question, args.company, args.quarter)
